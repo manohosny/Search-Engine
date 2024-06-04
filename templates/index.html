@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Engine</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Search..." aria-label="Search" aria-describedby="search-btn" id="search-input">
+          <button class="btn btn-primary" type="button" id="search-btn">Search</button>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="results-container">
+      <!-- Search results will be dynamically added here -->
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const searchBtn = document.getElementById('search-btn');
+    const resultsContainer = document.getElementById('results-container');
+    const searchInput = document.getElementById('search-input');
+
+    searchBtn.addEventListener('click', () => {
+      // Clear previous results
+      resultsContainer.innerHTML = '';
+
+      // Get the search query
+      const searchQuery = searchInput.value;
+
+      // Call the Flask API endpoint to get the search results
+      fetch('/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query: searchQuery })
+      })
+      .then(response => response.json())
+      .then(results => {
+        // Display search results
+        if (results.error) {
+          // Handle error
+          const errorCard = document.createElement('div');
+          errorCard.classList.add('col-md-6', 'mb-3');
+          errorCard.innerHTML = `
+            <div class="card">
+              <div class="card-body">
+                <p class="card-text text-danger">${results.error}</p>
+              </div>
+            </div>
+          `;
+          resultsContainer.appendChild(errorCard);
+        } else {
+          results.forEach(result => {
+  const resultCard = document.createElement('div');
+  resultCard.classList.add('col-12', 'mb-3');
+  resultCard.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">${result.doc_id}</h5>
+        <p class="card-text">${result.text}</p>
+        <p class="card-text">Score: ${result.score}</p>
+        <p class="card-text">Retrieval Time: ${result.retrieval_time} seconds</p>
+      </div>
+    </div>
+  `;
+  resultsContainer.appendChild(resultCard);
+});
+        }
+      })
+      .catch(error => {
+        // Handle network error
+        const errorCard = document.createElement('div');
+            errorCard.classList.add('col-12', 'mb-3');
+            errorCard.innerHTML = `
+              <div class="card">
+                <div class="card-body">
+                  <p class="card-text text-danger">An error occurred while fetching the search results.</p>
+                </div>
+              </div>
+            `;
+            resultsContainer.appendChild(errorCard);
+        console.error('Error:', error);
+      });
+    });
+  </script>
+</body>
+</html>
